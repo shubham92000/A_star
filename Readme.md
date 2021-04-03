@@ -1,5 +1,5 @@
 ﻿<h1>Board</h1>
-! [board] (img/board.png)
+![](img/board.png)
 
 <h1>Output</h1>
-! [output_path] (img/output_path.png)
+![](img/output_path.png)
