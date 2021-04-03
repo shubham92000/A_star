@@ -3,10 +3,18 @@
 #include<vector>
 #include<string>
 #include<sstream>
-#include<locale.h>
+#include<iomanip>
 #include<algorithm>
 #include<utility>
+#include<string>
 
+using std::string;
+
+string empty = "0    ";
+string obstacle = "\U000026F0";
+string path = "\U0001F3C3"; 
+string start = "\U0001F3E0";
+string end = "\U0001F3F3";
 enum class State {kEmpty , kObstacle , kClosed , kPath , kStart , kEnd};
 
 std::vector<State> ParseLine(std::string line){
@@ -18,6 +26,12 @@ std::vector<State> ParseLine(std::string line){
             output.push_back(State::kObstacle);
         }else if(i==2){
             output.push_back(State::kClosed);
+        }else if(i==3){
+            output.push_back(State::kPath);
+        }else if(i==4){
+            output.push_back(State::kStart);
+        }else if(i==5){
+            output.push_back(State::kEnd);
         }else{
             output.push_back(State::kEmpty);
         }
@@ -51,12 +65,12 @@ std::vector<std::vector<State>> ReadBoardFile(std::string file_name){
 
 std::string CellString(State cell){
     switch(cell){
-        case State::kObstacle: return "1    ";
-        case State::kClosed: return "2    ";
-        case State::kPath: return "3    ";
-        case State::kStart: return "4    ";
-        case State::kEnd: return "5    ";
-        default : return "0    ";
+        case State::kObstacle: return obstacle+"\t";
+        // case State::kClosed: return ;
+        case State::kPath: return path+"\t";
+        case State::kStart: return start+"\t";
+        case State::kEnd: return end+"\t";
+        default : return empty+"\t";
     }
 }
 
@@ -174,9 +188,9 @@ std::vector<std::vector<State>> Search(std::vector<std::vector<State>> board , i
                 
         if(x==end[0] && y==end[1]){
             // grid[x][y] = State::finish;
-            std::cout<<"found path\n";
-            path[x][y] = State::kPath;
             std::cout<<"steps needed: "<<grid[x][y].second<<"\n";
+            std::cout<<"found a path\n\n";
+            path[x][y] = State::kPath;
             return path;
         }
 
@@ -192,20 +206,23 @@ std::vector<std::vector<State>> Search(std::vector<std::vector<State>> board , i
 
 int main(){
 
-    std::string file_name = "1.board.txt";
-    std::vector<std::vector<State>> board;
-    board = ReadBoardFile(file_name);
-    PrintBoard(board);
-    std::cout<<"\n";
     int start[2] = {0,0};
     int end[2] = {4,5};
 
+    std::string file_name = "1.board.txt";
+    std::vector<std::vector<State>> board;
+    board = ReadBoardFile(file_name);
+    std::cout<<"board\n";
+    PrintBoard(board);
+
+    std::cout<<"\n";
+
     std::vector<std::vector<State>> path;
     path = Search(board,start,end);
-    std::cout<<"\n";
+
+    path[start[0]][start[1]] = State::kStart;
+    path[end[0]][end[1]] = State::kEnd;
     PrintBoard(path);
-    // PrintBoardpair(op_path);
-
-
+    
     return 0;
 }
