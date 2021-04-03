@@ -7,7 +7,7 @@
 #include<algorithm>
 #include<utility>
 
-enum class State {kEmpty , kObstacle , kClosed , kPath};
+enum class State {kEmpty , kObstacle , kClosed , kPath , kStart , kEnd};
 
 std::vector<State> ParseLine(std::string line){
     std::vector<State> output;
@@ -54,6 +54,8 @@ std::string CellString(State cell){
         case State::kObstacle: return "1    ";
         case State::kClosed: return "2    ";
         case State::kPath: return "3    ";
+        case State::kStart: return "4    ";
+        case State::kEnd: return "5    ";
         default : return "0    ";
     }
 }
@@ -95,11 +97,11 @@ bool compare(std::vector<int> v1,std::vector<int> v2){
 std::vector<int> CellSort(std::vector<std::vector<int>> & open_nodes){
     std::sort(open_nodes.begin(),open_nodes.end(),compare);
     std::vector<int> smallest = open_nodes[0];
-
+    open_nodes.erase(open_nodes.begin());                           //q.pop
     return smallest;
 }
 
-bool checkValidCell(int x,int y,std::vector<std::vector<std::pair<State,int>>> & grid ,std::vector<std::vector<State>> & board){
+bool checkValidCell(int x,int y,std::vector<std::vector<std::pair<State,int>>> & grid ,std::vector<std::vector<State>> board){
     bool check = (x>=0 && x<board.size() && y>=0 && y<board[0].size()  && board[x][y]!=State::kObstacle && grid[x][y].first!=State::kClosed);
     return check;
 }
@@ -109,14 +111,14 @@ int Heuristic(int x1,int y1,int x2,int y2){
     return dis;
 }
 
-void AddToOpen(int x,int y,int g,int h,std::vector<std::vector<int>> &open_nodes,std::vector<std::vector<std::pair<State,int>>>grid){
+void AddToOpen(int x,int y,int g,int h,std::vector<std::vector<int>> &open_nodes,std::vector<std::vector<std::pair<State,int>>> &grid){
     std::vector<int> node(4);
     node[0] = x;
     node[1] = y;
     node[2] = g;
     node[3] = h;
     
-    open_nodes.push_back(node);        //add to queue
+    open_nodes.push_back(node);              //add to queue
     
     grid[x][y].first = State::kClosed;       //visited
     grid[x][y].second = g;
@@ -150,40 +152,40 @@ void ExpandNeighbours(std::vector<int> curr_node , std::vector<std::vector<State
     return;
 } 
 
-std::vector<std::vector<std::pair<State,int>>> Search(std::vector<std::vector<State>> board , int start[2] ,int end[2]){
-
+std::vector<std::vector<State>> Search(std::vector<std::vector<State>> board , int start[2] ,int end[2]){
+    std::vector<std::vector<State>>path(board.size(),std::vector<State>(board[0].size())); 
     std::vector<std::vector<int>>open_nodes;                       //queue
     std::vector<std::vector<std::pair<State,int>>>grid(board.size(),std::vector<std::pair<State,int>>(board[0].size()));             //visited array
     
     int initial_cost = 0; //g initial
     int heuristic_value = Heuristic(start[0],start[1],end[0],end[1]);   //h initial
     AddToOpen(start[0],start[1],initial_cost,heuristic_value,open_nodes,grid);  // add first node to queue
-    
+
     while(!open_nodes.empty()){
         
         std::vector<int> curr_node = CellSort(open_nodes);            //q.front
-        open_nodes.erase(open_nodes.begin());                         //q.pop
+        
 
         int x,y,g,h;
         x = curr_node[0];
         y = curr_node[1];
         g = curr_node[2];
         h = curr_node[3];
-
-        grid[x][y].first = State::kPath;
-        grid[x][y].second = g;
-
+                
         if(x==end[0] && y==end[1]){
             // grid[x][y] = State::finish;
             std::cout<<"found path\n";
-            return grid;
+            path[x][y] = State::kPath;
+            std::cout<<"steps needed: "<<grid[x][y].second<<"\n";
+            return path;
         }
 
+        path[x][y] = State::kPath;
         ExpandNeighbours(curr_node,board,grid,open_nodes);
     }
 
-    std::cout<<"no path found";
-    return grid;
+    std::cout<<"no path found\n";
+    return path;
 }
 
 
@@ -198,9 +200,12 @@ int main(){
     int start[2] = {0,0};
     int end[2] = {4,5};
 
-    std::vector<std::vector<std::pair<State,int>>> op_path;
-    op_path = Search(board,start,end);
-    PrintBoardpair(op_path);
+    std::vector<std::vector<State>> path;
+    path = Search(board,start,end);
+    std::cout<<"\n";
+    PrintBoard(path);
+    // PrintBoardpair(op_path);
+
 
     return 0;
 }
